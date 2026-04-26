@@ -1,8 +1,6 @@
-import { EyeIcon } from "lucide-react";
-import ClampedSection from "@/components/ClampedSection";
+import { HashIcon } from "lucide-react";
 import { AttachmentListView, LocationDisplayView, RelationListView } from "@/components/MemoMetadata";
-import { isReferenceRelation } from "@/components/MemoMetadata/Relation/relationHelpers";
-import { Button } from "@/components/ui/button";
+import { type MemoFilter, useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
 import MemoContent from "../../MemoContent";
@@ -44,25 +42,55 @@ const MemoBody: React.FC<MemoBodyProps> = ({ compact }) => {
           blurred && !showBlurredContent && "blur-lg transition-all duration-200",
         )}
       >
-        {/* Compact bounds the whole body — attachments included — behind one Show more.
-            Reactions stay outside so they never hide under the fade. */}
-        <ClampedSection enabled={Boolean(compact)}>
-          <MemoContent
-            memoName={memo.name}
-            content={memo.content}
-            onClick={handleMemoContentClick}
-            onDoubleClick={handleMemoContentDoubleClick}
-            compact={Boolean(compact)}
-          />
-          <AttachmentListView attachments={memo.attachments} onImagePreview={openPreview} />
-          <RelationListView relations={referencedMemos} currentMemoName={memo.name} parentPage={parentPage} />
-          {memo.location && <LocationDisplayView location={memo.location} />}
-        </ClampedSection>
+        <MemoContent
+          key={`${memo.name}-${memo.updateTime}`}
+          content={memo.content}
+          onClick={handleMemoContentClick}
+          onDoubleClick={handleMemoContentDoubleClick}
+          compact={memo.pinned ? false : compact} // Always show full content when pinned
+        />
+        {memo.tags.length > 0 && <MemoTagBadges tags={memo.tags} />}
+        <AttachmentListView attachments={memo.attachments} onImagePreview={openPreview} />
+        <RelationListView relations={referencedMemos} currentMemoName={memo.name} parentPage={parentPage} />
+        {memo.location && <LocationDisplayView location={memo.location} />}
         <MemoReactionListView memo={memo} reactions={memo.reactions} />
       </div>
 
       {blurred && !showBlurredContent && <BlurOverlay onClick={toggleBlurVisibility} />}
     </>
+  );
+};
+
+const MemoTagBadges: React.FC<{ tags: string[] }> = ({ tags }) => {
+  const { addFilter, removeFilter, getFiltersByFactor } = useMemoFilterContext();
+
+  const handleTagClick = (tag: string) => {
+    const isActive = getFiltersByFactor("tagSearch").some((f: MemoFilter) => f.value === tag);
+    if (isActive) {
+      removeFilter((f: MemoFilter) => f.factor === "tagSearch" && f.value === tag);
+    } else {
+      removeFilter((f: MemoFilter) => f.factor === "tagSearch");
+      addFilter({ factor: "tagSearch", value: tag });
+    }
+  };
+
+  return (
+    <div className="w-full flex flex-row flex-wrap gap-1.5">
+      {tags.map((tag) => (
+        <button
+          key={tag}
+          type="button"
+          className="inline-flex items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleTagClick(tag);
+          }}
+        >
+          <HashIcon className="w-3 h-3" />
+          {tag}
+        </button>
+      ))}
+    </div>
   );
 };
 
