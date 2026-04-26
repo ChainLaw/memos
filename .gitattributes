@@ -1,0 +1,12 @@
+# Default: detect text vs binary, normalize to LF in repo
+* text=auto eol=lf
+
+# Shell scripts and Dockerfile must be LF (executed in Linux containers)
+*.sh text eol=lf
+Dockerfile text eol=lf
+Dockerfile.* text eol=lf
+
+# Windows-only scripts must be CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
