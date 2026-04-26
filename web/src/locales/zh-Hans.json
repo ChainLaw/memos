@@ -85,6 +85,7 @@
     "pin": "置顶",
     "pinned": "已置顶",
     "preview": "预览",
+    "reaction": "表情回应",
     "profile": "个人资料",
     "properties": "属性",
     "referenced-by": "被引用",
@@ -613,7 +614,7 @@
   "tag": {
     "all-tags": "全部标签",
     "create-tag": "创建标签",
-    "create-tags-guide": "您可以通过输入 “#标签” 创建标签。",
+    "create-tags-guide": "通过备忘录菜单或在内容中输入 #标签 创建标签。",
     "delete-confirm": "您确定要删除此标签吗?所有相关的备忘录将会被归档。",
     "delete-success": "标签删除成功",
     "delete-tag": "删除标签",

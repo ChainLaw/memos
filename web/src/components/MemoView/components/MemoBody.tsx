@@ -1,4 +1,6 @@
+import { HashIcon } from "lucide-react";
 import { AttachmentListView, LocationDisplayView, RelationListView } from "@/components/MemoMetadata";
+import { type MemoFilter, useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { cn } from "@/lib/utils";
 import { MemoRelation_Type } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
@@ -44,6 +46,7 @@ const MemoBody: React.FC<MemoBodyProps> = ({ compact }) => {
           onDoubleClick={handleMemoContentDoubleClick}
           compact={memo.pinned ? false : compact} // Always show full content when pinned
         />
+        {memo.tags.length > 0 && <MemoTagBadges tags={memo.tags} />}
         <AttachmentListView attachments={memo.attachments} onImagePreview={openPreview} />
         <RelationListView relations={referencedMemos} currentMemoName={memo.name} parentPage={parentPage} />
         {memo.location && <LocationDisplayView location={memo.location} />}
@@ -52,6 +55,39 @@ const MemoBody: React.FC<MemoBodyProps> = ({ compact }) => {
 
       {blurred && !showBlurredContent && <BlurOverlay onClick={toggleBlurVisibility} />}
     </>
+  );
+};
+
+const MemoTagBadges: React.FC<{ tags: string[] }> = ({ tags }) => {
+  const { addFilter, removeFilter, getFiltersByFactor } = useMemoFilterContext();
+
+  const handleTagClick = (tag: string) => {
+    const isActive = getFiltersByFactor("tagSearch").some((f: MemoFilter) => f.value === tag);
+    if (isActive) {
+      removeFilter((f: MemoFilter) => f.factor === "tagSearch" && f.value === tag);
+    } else {
+      removeFilter((f: MemoFilter) => f.factor === "tagSearch");
+      addFilter({ factor: "tagSearch", value: tag });
+    }
+  };
+
+  return (
+    <div className="w-full flex flex-row flex-wrap gap-1.5">
+      {tags.map((tag) => (
+        <button
+          key={tag}
+          type="button"
+          className="inline-flex items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleTagClick(tag);
+          }}
+        >
+          <HashIcon className="w-3 h-3" />
+          {tag}
+        </button>
+      ))}
+    </div>
   );
 };
 

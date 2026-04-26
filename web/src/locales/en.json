@@ -118,6 +118,7 @@
     "pin": "Pin",
     "pinned": "Pinned",
     "preview": "Preview",
+    "reaction": "Reaction",
     "profile": "Profile",
     "properties": "Properties",
     "referenced-by": "Referenced by",
@@ -650,7 +651,7 @@
   "tag": {
     "all-tags": "All Tags",
     "create-tag": "Create Tag",
-    "create-tags-guide": "You can create tags by inputting `#tag`.",
+    "create-tags-guide": "Create tags via the memo menu or by typing `#tag` in content.",
     "delete-confirm": "Are you sure you want to delete this tag? All related memos will be archived.",
     "delete-success": "Tag deleted successfully",
     "delete-tag": "Delete Tag",

@@ -1,17 +1,18 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
-import { BookmarkIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import copy from "copy-to-clipboard";
+import { BookmarkIcon, CopyIcon, Edit3Icon } from "lucide-react";
+import { useCallback } from "react";
+import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import useNavigateTo from "@/hooks/useNavigateTo";
 import i18n from "@/i18n";
-import { cn } from "@/lib/utils";
 import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import type { User } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityToString } from "@/utils/memo";
 import MemoActionMenu from "../../MemoActionMenu";
-import { ReactionSelector } from "../../MemoReactionListView";
+import { MemoTagPopover } from "../../MemoActionMenu/MemoTagPopover";
 import UserAvatar from "../../UserAvatar";
 import VisibilityIcon from "../../VisibilityIcon";
 import { useMemoActions } from "../hooks";
@@ -20,7 +21,6 @@ import type { MemoHeaderProps } from "../types";
 
 const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, showPinned }) => {
   const t = useTranslate();
-  const [reactionSelectorOpen, setReactionSelectorOpen] = useState(false);
 
   const { memo, creator, currentUser, parentPage, isArchived, readonly, openEditor } = useMemoViewContext();
   const { relativeTimeFormat } = useMemoViewDerived();
@@ -53,12 +53,32 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
       </div>
 
       <div className="flex flex-row justify-end items-center select-none shrink-0 gap-2">
-        {currentUser && !isArchived && (
-          <ReactionSelector
-            className={cn("border-none w-auto h-auto", reactionSelectorOpen && "block!", "block sm:hidden sm:group-hover:block")}
-            memo={memo}
-            onOpenChange={setReactionSelectorOpen}
-          />
+        {/* Tag button (non-readonly, non-archived) */}
+        {currentUser && !readonly && !isArchived && <MemoTagPopover memo={memo} />}
+
+        {/* Copy content button (non-archived) */}
+        {!isArchived && (
+          <button
+            type="button"
+            className="h-7 w-7 flex justify-center items-center rounded-full cursor-pointer transition-all hover:opacity-80"
+            onClick={() => {
+              copy(memo.content);
+              toast.success(t("message.succeed-copy-content"));
+            }}
+          >
+            <CopyIcon className="w-4 h-4 text-muted-foreground" />
+          </button>
+        )}
+
+        {/* Edit button (non-readonly, non-archived) */}
+        {currentUser && !readonly && !isArchived && (
+          <button
+            type="button"
+            className="h-7 w-7 flex justify-center items-center rounded-full cursor-pointer transition-all hover:opacity-80"
+            onClick={openEditor}
+          >
+            <Edit3Icon className="w-4 h-4 text-muted-foreground" />
+          </button>
         )}
 
         {showVisibility && memo.visibility !== Visibility.PRIVATE && (
