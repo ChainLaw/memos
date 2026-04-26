@@ -213,8 +213,9 @@ message Memo {
   // The visibility of the memo.
   Visibility visibility = 9 [(google.api.field_behavior) = REQUIRED];
 
-  // Output only. The tags extracted from the content.
-  repeated string tags = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The tags of the memo. Includes both content-extracted and user-assigned tags.
+  // When updating, the provided tags are stored as user-assigned (custom) tags.
+  repeated string tags = 10 [(google.api.field_behavior) = OPTIONAL];
 
   // Whether the memo is pinned.
   bool pinned = 11 [(google.api.field_behavior) = OPTIONAL];

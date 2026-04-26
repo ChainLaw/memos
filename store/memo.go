@@ -50,6 +50,10 @@ type Memo struct {
 	Pinned     bool
 	Payload    *storepb.MemoPayload
 
+	// User-assigned tags (independent of content extraction).
+	// Stored as "customTags" in the payload JSON column.
+	CustomTags []string
+
 	// Composed fields
 	ParentUID *string
 }
@@ -100,6 +104,9 @@ type UpdateMemo struct {
 	Visibility *Visibility
 	Pinned     *bool
 	Payload    *storepb.MemoPayload
+	// CustomTags stores user-assigned tags. A non-nil slice (including empty)
+	// means "update custom tags". A nil slice means "don't change custom tags".
+	CustomTags []string
 }
 
 type DeleteMemo struct {

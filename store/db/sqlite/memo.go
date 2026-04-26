@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -13,16 +14,56 @@ import (
 	"github.com/usememos/memos/store"
 )
 
+// payloadCustomTags is used to inject/extract customTags from the payload JSON
+// without modifying the protobuf-generated MemoPayload struct.
+type payloadCustomTags struct {
+	CustomTags []string `json:"customTags,omitempty"`
+}
+
+// marshalPayloadWithCustomTags serializes MemoPayload via protojson and injects customTags.
+func marshalPayloadWithCustomTags(payload *storepb.MemoPayload, customTags []string) (string, error) {
+	payloadBytes, err := protojson.Marshal(payload)
+	if err != nil {
+		return "{}", err
+	}
+	if len(customTags) == 0 {
+		return string(payloadBytes), nil
+	}
+	// Parse the protojson output and inject customTags.
+	var obj map[string]any
+	if err := json.Unmarshal(payloadBytes, &obj); err != nil {
+		return string(payloadBytes), nil
+	}
+	obj["customTags"] = customTags
+	merged, err := json.Marshal(obj)
+	if err != nil {
+		return string(payloadBytes), nil
+	}
+	return string(merged), nil
+}
+
+// unmarshalPayloadWithCustomTags deserializes the payload JSON into MemoPayload and extracts customTags.
+func unmarshalPayloadWithCustomTags(payloadBytes []byte) (*storepb.MemoPayload, []string, error) {
+	payload := &storepb.MemoPayload{}
+	if err := protojsonUnmarshaler.Unmarshal(payloadBytes, payload); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to unmarshal payload")
+	}
+	var extra payloadCustomTags
+	// Best-effort extraction of customTags; ignore errors.
+	_ = json.Unmarshal(payloadBytes, &extra)
+	return payload, extra.CustomTags, nil
+}
+
 func (d *DB) CreateMemo(ctx context.Context, create *store.Memo) (*store.Memo, error) {
 	fields := []string{"`uid`", "`creator_id`", "`content`", "`visibility`", "`payload`"}
 	placeholder := []string{"?", "?", "?", "?", "?"}
 	payload := "{}"
 	if create.Payload != nil {
-		payloadBytes, err := protojson.Marshal(create.Payload)
+		p, err := marshalPayloadWithCustomTags(create.Payload, create.CustomTags)
 		if err != nil {
 			return nil, err
 		}
-		payload = string(payloadBytes)
+		payload = p
 	}
 	args := []any{create.UID, create.CreatorID, create.Content, create.Visibility, payload}
 
@@ -177,11 +218,12 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		if err := rows.Scan(dests...); err != nil {
 			return nil, err
 		}
-		payload := &storepb.MemoPayload{}
-		if err := protojsonUnmarshaler.Unmarshal(payloadBytes, payload); err != nil {
-			return nil, errors.Wrap(err, "failed to unmarshal payload")
+		payload, customTags, err := unmarshalPayloadWithCustomTags(payloadBytes)
+		if err != nil {
+			return nil, err
 		}
 		memo.Payload = payload
+		memo.CustomTags = customTags
 		list = append(list, &memo)
 	}
 
@@ -216,11 +258,25 @@ func (d *DB) UpdateMemo(ctx context.Context, update *store.UpdateMemo) error {
 		set, args = append(set, "`pinned` = ?"), append(args, *v)
 	}
 	if v := update.Payload; v != nil {
-		payloadBytes, err := protojson.Marshal(v)
+		p, err := marshalPayloadWithCustomTags(v, update.CustomTags)
 		if err != nil {
 			return err
 		}
-		set, args = append(set, "`payload` = ?"), append(args, string(payloadBytes))
+		set, args = append(set, "`payload` = ?"), append(args, p)
+	} else if update.CustomTags != nil {
+		// Update only customTags without changing the rest of the payload.
+		// Read current payload from DB first.
+		var currentPayloadBytes []byte
+		if err := d.db.QueryRowContext(ctx, "SELECT `payload` FROM `memo` WHERE `id` = ?", update.ID).Scan(&currentPayloadBytes); err != nil {
+			return errors.Wrap(err, "failed to read current payload")
+		}
+		currentPayload := &storepb.MemoPayload{}
+		_ = protojsonUnmarshaler.Unmarshal(currentPayloadBytes, currentPayload)
+		p, err := marshalPayloadWithCustomTags(currentPayload, update.CustomTags)
+		if err != nil {
+			return err
+		}
+		set, args = append(set, "`payload` = ?"), append(args, p)
 	}
 	if len(set) == 0 {
 		return nil

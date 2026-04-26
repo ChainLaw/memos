@@ -461,6 +461,7 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 			}
 			update.Content = &memo.Content
 			update.Payload = memo.Payload
+			update.CustomTags = memo.CustomTags
 		} else if path == "visibility" {
 			visibility := convertVisibilityToStore(request.Memo.Visibility)
 			update.Visibility = &visibility
@@ -493,6 +494,19 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 			payload := memo.Payload
 			payload.Location = convertLocationToStore(request.Memo.Location)
 			update.Payload = payload
+			update.CustomTags = memo.CustomTags
+		} else if path == "tags" {
+			// Update user-assigned custom tags and rebuild payload.tags to include them.
+			customTags := request.Memo.Tags
+			if customTags == nil {
+				customTags = []string{}
+			}
+			update.CustomTags = customTags
+			memo.CustomTags = customTags
+			if err := memopayload.RebuildMemoPayload(ctx, memo, s.MarkdownService); err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to rebuild memo payload: %v", err)
+			}
+			update.Payload = memo.Payload
 		} else if path == "attachments" {
 			if err := s.setMemoAttachmentsInternal(ctx, memo, request.Memo.Attachments); err != nil {
 				return nil, errors.Wrap(err, "failed to set memo attachments")

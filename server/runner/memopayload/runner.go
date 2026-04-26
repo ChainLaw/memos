@@ -54,8 +54,9 @@ func (r *Runner) RunOnce(ctx context.Context) {
 				continue
 			}
 			if err := r.Store.UpdateMemo(ctx, &store.UpdateMemo{
-				ID:      memo.ID,
-				Payload: memo.Payload,
+				ID:         memo.ID,
+				Payload:    memo.Payload,
+				CustomTags: memo.CustomTags,
 			}); err != nil {
 				slog.Error("failed to update memo", "err", err, "memoID", memo.ID)
 				continue
@@ -82,7 +83,26 @@ func RebuildMemoPayload(_ context.Context, memo *store.Memo, markdownService mar
 		return errors.Wrap(err, "failed to extract markdown metadata")
 	}
 
-	memo.Payload.Tags = data.Tags
+	memo.Payload.Tags = mergeUniqueTags(data.Tags, memo.CustomTags)
 	memo.Payload.Property = data.Property
 	return nil
+}
+
+// mergeUniqueTags returns a deduplicated union of content-extracted and custom tags.
+func mergeUniqueTags(contentTags, customTags []string) []string {
+	seen := make(map[string]struct{}, len(contentTags)+len(customTags))
+	result := make([]string, 0, len(contentTags)+len(customTags))
+	for _, t := range contentTags {
+		if _, ok := seen[t]; !ok {
+			seen[t] = struct{}{}
+			result = append(result, t)
+		}
+	}
+	for _, t := range customTags {
+		if _, ok := seen[t]; !ok {
+			seen[t] = struct{}{}
+			result = append(result, t)
+		}
+	}
+	return result
 }
