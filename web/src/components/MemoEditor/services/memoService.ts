@@ -48,6 +48,10 @@ function buildUpdateMask(
     mask.add("location");
     patch.location = state.metadata.location;
   }
+  if (!isEqual(state.metadata.tags, prevMemo.tags)) {
+    mask.add("tags");
+    patch.tags = state.metadata.tags;
+  }
 
   // Auto-update timestamp if content changed
   if (["content", "attachments", "relations", "location"].some((key) => mask.has(key))) {
@@ -119,6 +123,14 @@ export const memoService = {
         })
       : await memoServiceClient.createMemo({ memo: memoData });
 
+    // tags is output-only on create; set via a separate update if any were chosen
+    if (state.metadata.tags.length > 0) {
+      await memoServiceClient.updateMemo({
+        memo: create(MemoSchema, { name: memo.name, tags: state.metadata.tags }),
+        updateMask: create(FieldMaskSchema, { paths: ["tags"] }),
+      });
+    }
+
     return { memoName: memo.name, hasChanges: true };
   },
 
@@ -131,6 +143,7 @@ export const memoService = {
         attachments: memo.attachments,
         relations: memo.relations,
         location: memo.location,
+        tags: memo.tags ?? [],
       },
       ui: {
         isFocusMode: false,

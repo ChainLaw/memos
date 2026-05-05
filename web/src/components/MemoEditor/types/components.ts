@@ -24,6 +24,7 @@ export interface EditorToolbarProps {
   onCancel?: () => void;
   memoName?: string;
   onAudioRecorderClick: () => void;
+  editorRef: React.RefObject<EditorRefActions>;
 }
 
 export interface EditorMetadataProps {

@@ -1,13 +1,15 @@
+import { ClipboardIcon } from "lucide-react";
 import type { FC } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslate } from "@/utils/i18n";
 import { validationService } from "../services";
 import { useEditorContext } from "../state";
 import InsertMenu from "../Toolbar/InsertMenu";
+import TagPickerButton from "../Toolbar/TagPickerButton";
 import VisibilitySelector from "../Toolbar/VisibilitySelector";
 import type { EditorToolbarProps } from "../types";
 
-export const EditorToolbar: FC<EditorToolbarProps> = ({ onSave, onCancel, memoName, onAudioRecorderClick }) => {
+export const EditorToolbar: FC<EditorToolbarProps> = ({ onSave, onCancel, memoName, onAudioRecorderClick, editorRef }) => {
   const t = useTranslate();
   const { state, actions, dispatch } = useEditorContext();
   const { valid } = validationService.canSave(state);
@@ -26,9 +28,20 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({ onSave, onCancel, memoNa
     dispatch(actions.setMetadata({ visibility }));
   };
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        editorRef.current?.insertText(text);
+      }
+    } catch {
+      // clipboard access denied
+    }
+  };
+
   return (
     <div className="w-full flex flex-row justify-between items-center mb-2">
-      <div className="flex flex-row justify-start items-center">
+      <div className="flex flex-row justify-start items-center gap-1">
         <InsertMenu
           isUploading={state.ui.isLoading.uploading}
           location={state.metadata.location}
@@ -37,6 +50,10 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({ onSave, onCancel, memoNa
           memoName={memoName}
           onAudioRecorderClick={onAudioRecorderClick}
         />
+        <Button variant="outline" size="icon" className="shadow-none" onClick={handlePaste} title="Paste">
+          <ClipboardIcon className="size-4" />
+        </Button>
+        <TagPickerButton />
       </div>
 
       <div className="flex flex-row justify-end items-center gap-2">
