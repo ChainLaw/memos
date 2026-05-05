@@ -1,5 +1,6 @@
 import type { Location, Memo, Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import type { AudioRecorderStatus } from "../hooks/useAudioRecorder";
+import type { EditorController } from "./editorController";
 
 export interface MemoEditorProps {
   className?: string;
@@ -36,9 +37,10 @@ export interface EditorToolbarProps {
   onCancel?: () => void;
   memoName?: string;
   onAudioRecorderClick: () => void;
-  /** Whether the formatting toolbar is shown in normal mode (persisted preference). */
-  isFormattingToolbarVisible: boolean;
-  onToggleFormattingToolbar: () => void;
+  /** Persisted toggle for the normal-mode formatting toolbar. */
+  isFormattingToolbarVisible?: boolean;
+  onToggleFormattingToolbar?: () => void;
+  editorRef: React.RefObject<EditorController | null>;
 }
 
 export interface EditorMetadataProps {

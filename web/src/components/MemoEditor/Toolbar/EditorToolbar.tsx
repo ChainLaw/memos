@@ -1,3 +1,4 @@
+import { ClipboardIcon } from "lucide-react";
 import type { FC } from "react";
 import { Button } from "@/components/ui/button";
 import type { Location, Visibility } from "@/types/proto/api/v1/memo_service_pb";
@@ -6,6 +7,7 @@ import { validationService } from "../services";
 import { useEditorContext, useEditorSelector } from "../state";
 import type { EditorToolbarProps } from "../types";
 import InsertMenu from "./InsertMenu";
+import TagPickerButton from "./TagPickerButton";
 import VisibilitySelector from "./VisibilitySelector";
 
 export const EditorToolbar: FC<EditorToolbarProps> = ({
@@ -15,6 +17,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   onAudioRecorderClick,
   isFormattingToolbarVisible,
   onToggleFormattingToolbar,
+  editorRef,
 }) => {
   const t = useTranslate();
   const { actions, dispatch } = useEditorContext();
@@ -39,6 +42,17 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
     dispatch(actions.setMetadata({ visibility: next }));
   };
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        editorRef.current?.insertMarkdown(text);
+      }
+    } catch {
+      // clipboard access denied
+    }
+  };
+
   return (
     <div className="w-full flex flex-row justify-between items-center mb-2">
       <div className="flex flex-row justify-start items-center gap-1">
@@ -52,6 +66,10 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
           isFormattingToolbarVisible={isFormattingToolbarVisible}
           onToggleFormattingToolbar={onToggleFormattingToolbar}
         />
+        <Button variant="outline" size="icon" className="shadow-none" onClick={handlePaste} title="Paste">
+          <ClipboardIcon className="size-4" />
+        </Button>
+        <TagPickerButton />
         <VisibilitySelector value={visibility} onChange={handleVisibilityChange} />
       </div>
 
