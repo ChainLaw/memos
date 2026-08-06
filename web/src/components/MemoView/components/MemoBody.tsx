@@ -1,5 +1,8 @@
-import { HashIcon } from "lucide-react";
+import { EyeIcon, HashIcon } from "lucide-react";
+import ClampedSection from "@/components/ClampedSection";
 import { AttachmentListView, LocationDisplayView, RelationListView } from "@/components/MemoMetadata";
+import { isReferenceRelation } from "@/components/MemoMetadata/Relation/relationHelpers";
+import { Button } from "@/components/ui/button";
 import { type MemoFilter, useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
@@ -42,17 +45,19 @@ const MemoBody: React.FC<MemoBodyProps> = ({ compact }) => {
           blurred && !showBlurredContent && "blur-lg transition-all duration-200",
         )}
       >
-        <MemoContent
-          key={`${memo.name}-${memo.updateTime}`}
-          content={memo.content}
-          onClick={handleMemoContentClick}
-          onDoubleClick={handleMemoContentDoubleClick}
-          compact={memo.pinned ? false : compact} // Always show full content when pinned
-        />
-        {memo.tags.length > 0 && <MemoTagBadges tags={memo.tags} />}
-        <AttachmentListView attachments={memo.attachments} onImagePreview={openPreview} />
-        <RelationListView relations={referencedMemos} currentMemoName={memo.name} parentPage={parentPage} />
-        {memo.location && <LocationDisplayView location={memo.location} />}
+        <ClampedSection enabled={Boolean(compact && !memo.pinned)}>
+          <MemoContent
+            memoName={memo.name}
+            content={memo.content}
+            onClick={handleMemoContentClick}
+            onDoubleClick={handleMemoContentDoubleClick}
+            compact={Boolean(compact && !memo.pinned)}
+          />
+          {(memo.tags?.length ?? 0) > 0 && <MemoTagBadges tags={memo.tags} />}
+          <AttachmentListView attachments={memo.attachments} onImagePreview={openPreview} />
+          <RelationListView relations={referencedMemos} currentMemoName={memo.name} parentPage={parentPage} />
+          {memo.location && <LocationDisplayView location={memo.location} />}
+        </ClampedSection>
         <MemoReactionListView memo={memo} reactions={memo.reactions} />
       </div>
 

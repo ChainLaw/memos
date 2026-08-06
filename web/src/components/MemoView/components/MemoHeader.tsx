@@ -1,4 +1,3 @@
-import { timestampDate } from "@bufbuild/protobuf/wkt";
 import copy from "copy-to-clipboard";
 import { BookmarkIcon, CopyIcon, Edit3Icon } from "lucide-react";
 import { useCallback } from "react";

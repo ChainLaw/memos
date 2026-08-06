@@ -4,8 +4,6 @@ import {
   BookmarkMinusIcon,
   BookmarkPlusIcon,
   LinkIcon,
-  ListChecksIcon,
-  ListRestartIcon,
   MoreVerticalIcon,
   SmilePlusIcon,
   TrashIcon,
@@ -22,8 +20,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import useCurrentUser from "@/hooks/useCurrentUser";
 import { useInstance } from "@/contexts/InstanceContext";
+import useCurrentUser from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
 import { State } from "@/types/proto/api/v1/common_pb";
 import { useTranslate } from "@/utils/i18n";
@@ -44,21 +42,14 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
   // Derived state
   const isComment = Boolean(memo.parent);
   const isArchived = memo.state === State.ARCHIVED;
-  const canMutateTasks = !readonly && !isArchived && Boolean(memo.property?.hasTaskList);
-  const hasOpenTasks = Boolean(memo.property?.hasIncompleteTasks);
 
   // Action handlers
-  const {
-    handleTogglePinMemoBtnClick,
-    handleToggleMemoStatusClick,
-    handleCopyLink,
-    handleDeleteMemoClick,
-    confirmDeleteMemo,
-  } = useMemoActionHandlers({
-    memo,
-    onEdit: props.onEdit,
-    setDeleteDialogOpen,
-  });
+  const { handleTogglePinMemoBtnClick, handleToggleMemoStatusClick, handleCopyLink, handleDeleteMemoClick, confirmDeleteMemo } =
+    useMemoActionHandlers({
+      memo,
+      onEdit: props.onEdit,
+      setDeleteDialogOpen,
+    });
 
   return (
     <DropdownMenu>

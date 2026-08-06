@@ -7,16 +7,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useUserStats } from "@/hooks/useUserQueries";
 import { useTranslate } from "@/utils/i18n";
-import { useEditorContext } from "../state";
+import { useEditorContext, useEditorSelector } from "../state";
 
 const TagPickerButton = () => {
   const translate = useTranslate();
   const currentUser = useCurrentUser();
   const { data: userStats } = useUserStats(currentUser?.name);
-  const { state, actions, dispatch } = useEditorContext();
+  const { actions, dispatch } = useEditorContext();
   const [newTagName, setNewTagName] = useState("");
 
-  const selectedTags = state.metadata.tags;
+  const selectedTags = useEditorSelector((state) => state.metadata.tags);
 
   // Union of server-known tags and locally selected tags (so newly added tags are visible)
   const allTags = useMemo(
@@ -25,9 +25,7 @@ const TagPickerButton = () => {
   );
 
   const handleToggleTag = (tag: string) => {
-    const newTags = selectedTags.includes(tag)
-      ? selectedTags.filter((existing) => existing !== tag)
-      : [...selectedTags, tag];
+    const newTags = selectedTags.includes(tag) ? selectedTags.filter((existing) => existing !== tag) : [...selectedTags, tag];
     dispatch(actions.setMetadata({ tags: newTags }));
   };
 
@@ -43,10 +41,8 @@ const TagPickerButton = () => {
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="icon" className="shadow-none">
-          <TagIcon className="size-4" />
-        </Button>
+      <PopoverTrigger render={<Button variant="outline" size="icon" className="shadow-none" />}>
+        <TagIcon className="size-4" />
       </PopoverTrigger>
       <PopoverContent align="start" side="top" className="w-48 p-2">
         <div className="max-h-52 overflow-y-auto flex flex-col gap-0.5">

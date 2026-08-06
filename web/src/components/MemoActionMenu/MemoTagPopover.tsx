@@ -62,16 +62,18 @@ const MemoTagPopover = ({ memo, className }: MemoTagPopoverProps) => {
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "h-7 w-7 flex justify-center items-center rounded-full cursor-pointer transition-all hover:opacity-80",
-            className,
-          )}
-        >
-          <TagIcon className="w-4 h-4 text-muted-foreground" />
-        </button>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            className={cn(
+              "h-7 w-7 flex justify-center items-center rounded-full cursor-pointer transition-all hover:opacity-80",
+              className,
+            )}
+          />
+        }
+      >
+        <TagIcon className="w-4 h-4 text-muted-foreground" />
       </PopoverTrigger>
       <PopoverContent align="start" side="bottom" className="w-48 p-2">
         <div className="max-h-52 overflow-y-auto flex flex-col gap-0.5">
@@ -94,7 +96,12 @@ const MemoTagPopover = ({ memo, className }: MemoTagPopoverProps) => {
             }
           }}
         >
-          <Input className="h-7 text-sm" placeholder={t("tag.create-tag")} value={newTagName} onChange={(e) => setNewTagName(e.target.value)} />
+          <Input
+            className="h-7 text-sm"
+            placeholder={t("tag.create-tag")}
+            value={newTagName}
+            onChange={(e) => setNewTagName(e.target.value)}
+          />
           <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleAddNewTag}>
             <PlusIcon className="w-4 h-auto" />
           </Button>
